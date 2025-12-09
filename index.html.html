@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invitación — Raspe y Gane 🎉</title>
+  <style>
+    :root{
+      --rosa:#ff6ea8;
+      --dorado:#f5c153;
+      --morado:#7b60ff;
+      --azul:#4cc9f0;
+      --negro:#222;
+      --gris:#f6f7fb;
+      --blanco:#fff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:"Segoe UI", Arial, Helvetica, sans-serif; color:var(--negro);
+      background:linear-gradient(180deg, #fff 0%, #fff 50%, #fef4f8 100%);
+    }
+    .wrap{max-width:1000px; margin:0 auto; padding:24px}
+    header{
+      display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      padding:16px 20px; border-radius:16px; background:var(--gris); border:1px solid #e7e9f3;
+    }
+    .title{
+      font-weight:800; font-size:clamp(22px, 3vw, 32px);
+      display:flex; align-items:center; gap:12px;
+    }
+    .badge{background:var(--rosa); color:#fff; padding:8px 12px; border-radius:999px; font-weight:700;}
+
+    .panel{
+      display:grid; grid-template-columns:repeat(4, minmax(180px, 1fr)); gap:12px; width:100%;
+    }
+    .panel label{font-size:12px; font-weight:700; color:#555}
+    .panel input{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #ddd; background:#fff; font-size:14px;
+    }
+    .panel button{
+      grid-column:span 4; padding:12px; border:none; border-radius:10px; background:var(--morado); color:#fff; font-weight:800; cursor:pointer;
+    }
+    .hero{
+      margin:22px 0; padding:20px; border:2px dashed #ffd1e2; border-radius:16px; background:#fff;
+    }
+    .hero h1{margin:0 0 8px 0; font-size:clamp(26px, 4vw, 40px)}
+    .hero p{margin:4px 0; font-size:clamp(14px, 2.2vw, 18px)}
+
+    .grid{
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; margin-top:8px;
+    }
+
+    .card{
+      position:relative; background:#fff; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.06);
+      padding:18px; overflow:hidden; border:1px solid #f1f1f7;
+    }
+    .card h3{margin:6px 0 4px 0; font-size:18px}
+    .card p{margin:0; color:#555; font-size:14px}
+    .etiqueta{
+      position:absolute; top:12px; right:12px; background:var(--dorado); color:#222; font-weight:800; padding:6px 10px; border-radius:999px; font-size:12px;
+      box-shadow:0 6px 14px rgba(245,193,83,.26);
+    }
+
+    .scratch-area{
+      position:relative; width:100%; height:160px; margin-top:10px; border-radius:14px; overflow:hidden; border:1px dashed #e6e6ee;
+      background:linear-gradient(135deg, #fff6fa 0%, #ffeef6 100%);
+      display:flex; align-items:center; justify-content:center; text-align:center; padding:12px;
+    }
+    .reveal{
+      position:relative; z-index:1; font-size:16px; line-height:1.3; font-weight:700;
+    }
+    .reveal .emoji{font-size:26px; display:block; margin-bottom:6px}
+
+    canvas.scratch-canvas{
+      position:absolute; inset:0; width:100%; height:100%;
+      cursor:grab; z-index:2;
+    }
+    .card.revealed canvas{display:none}
+    .card.revealed{outline:3px solid #c3f0ff}
+
+    .footer{
+      margin-top:22px; font-size:13px; color:#666; text-align:center;
+    }
+
+    /* Confeti */
+    .confetti-container{pointer-events:none; position:fixed; inset:0; overflow:hidden; z-index:9999}
+    .confetti{position:absolute; width:10px; height:14px; opacity:.95; transform:rotate(0deg); border-radius:2px}
+    @keyframes fall{
+      0%{transform:translateY(-20vh) rotate(0deg)}
+      100%{transform:translateY(110vh) rotate(720deg)}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">🎂 Invitación interactiva <span class="badge">Raspe y Gane</span></div>
+    <div class="panel">
+      <div>
+        <label>Nombre de la cumpleañera</label>
+        <input id="inpNombre" type="text" placeholder="Tu nombre" value="[Nombre]" />
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input id="inpFecha" type="text" placeholder="DD/MM/AAAA" value="[Fecha]" />
+      </div>
+      <div>
+        <label>Punto de encuentro</label>
+        <input id="inpEncuentro" type="text" placeholder="Compensar (sede)" value="Compensar" />
+      </div>
+      <div>
+        <label>Dress code (opcional)</label>
+        <input id="inpDress" type="text" placeholder="Casual chic" value="Casual chic" />
+      </div>
+      <button id="btnAplicar">Aplicar al diseño</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>¡Feliz cumpleaños <span id="txtNombre">[Nombre]</span>!</h1>
+    <p><strong id="txtFecha">[Fecha]</strong> · Punto de encuentro: <strong id="txtEncuentro">Compensar</strong> · Dress code: <strong id="txtDress">Casual chic</strong></p>
+    <p>Raspa cada tarjeta para revelar nuestro plan del día ✨</p>
+  </section>
+
+  <section class="grid">
+    <article class="card" data-idx="1">
+      <div class="etiqueta">Inicio</div>
+      <h3>Primera parada</h3>
+      <p>Empieza el día con sabor</p>
+      <div class="scratch-area">
+        <div class="reveal">
+          <span class="emoji">🥞☕</span>
+          <div><strong>Brunch en <span id="txtEncuentro2">Compensar</span></strong></div>
+          <div>Menú sorpresa y abrazos ilimitados</div>
+        </div>
+        <canvas class="scratch-canvas" data-threshold="0.55"></canvas>
+      </div>
+    </article>
+
+    <article class="card" data-idx="2">
+      <div class="etiqueta">Después</div>
+      <h3>Momentos que nos mantienen humildes</h3>
+      <p>Risas + historias reales</p>
+      <div class="scratch-area">
+        <div class="reveal">
+          <span class="emoji">📸💬</span>
+          <div><strong>Presentación en tu casa</strong></div>
+          <div>Pequeños fails, gran corazón</div>
+        </div>
+        <canvas class="scratch-canvas" data-threshold="0.55"></canvas>
+      </div>
+    </article>
+
+    <article class="card" data-idx="3">
+      <div class="etiqueta">Mood</div>
+      <h3>Karaoke</h3>
+      <p>Playlist lista, ¡que suene la fiesta!</p>
+      <div class="scratch-area">
+        <div class="reveal">
+          <span class="emoji">🎤🎶</span>
+          <div><strong>Canta como si nadie mirara</strong></div>
+          <div>Top hits + micrófonos listos</div>
+        </div>
+        <canvas class="scratch-canvas" data-threshold="0.55"></canvas>
+      </div>
+    </article>
+
+    <article class="card" data-idx="4">
+      <div class="etiqueta">Bar</div>
+      <h3>Barra de cócteles</h3>
+      <p>Mixología a tu gusto</p>
+      <div class="scratch-area">
+        <div class="reveal">
+          <span class="emoji">🍹✨</span>
+          <div><strong>Mocktails y cócteles</strong></div>
+          <div>Elige tu favorito (con y sin alcohol)</div>
+        </div>
+        <canvas class="scratch-canvas" data-threshold="0.55"></canvas>
+      </div>
+    </article>
+
+    <article class="card" data-idx="5">
+      <div class="etiqueta">Cierre</div>
+      <h3>Cine</h3>
+      <p>Final perfecto</p>
+      <div class="scratch-area">
+        <div class="reveal">
+          <span class="emoji">🎬🍿</span>
+          <div><strong>Cine en casa</strong></div>
+          <div>Película sorpresa + mantas</div>
+        </div>
+        <canvas class="scratch-canvas" data-threshold="0.55"></canvas>
+      </div>
+    </article>
+  </section>
+
+  <p class="footer">Tip: comparte este archivo por WhatsApp o correo. Quien lo abra podrá raspar y descubrir cada actividad. También puedes usar “Imprimir → Guardar como PDF”.</p>
+</div>
+
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+  // Actualiza textos con el panel
+  const inpNombre = document.getElementById('inpNombre');
+  const inpFecha = document.getElementById('inpFecha');
+  const inpEncuentro = document.getElementById('inpEncuentro');
+  const inpDress = document.getElementById('inpDress');
+  const btnAplicar = document.getElementById('btnAplicar');
+  const txtNombre = document.getElementById('txtNombre');
+  const txtFecha = document.getElementById('txtFecha');
+  const txtEncuentro = document.getElementById('txtEncuentro');
+  const txtEncuentro2 = document.getElementById('txtEncuentro2');
+  const txtDress = document.getElementById('txtDress');
+
+  btnAplicar.addEventListener('click', () => {
+    txtNombre.textContent = inpNombre.value || '[Nombre]';
+    txtFecha.textContent = inpFecha.value || '[Fecha]';
+    txtEncuentro.textContent = inpEncuentro.value || 'Compensar';
+    txtEncuentro2.textContent = inpEncuentro.value || 'Compensar';
+    txtDress.textContent = inpDress.value || 'Casual chic';
+  });
+
+  // Confeti sencillo
+  function burstConfetti(x, y){
+    const cont = document.getElementById('confetti');
+    const colors = ['#ff6ea8','#f5c153','#7b60ff','#4cc9f0','#7ce577','#f94144','#43aa8b'];
+    for(let i=0;i<100;i++){
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      const size = 6 + Math.random()*10;
+      el.style.width = size+'px';
+      el.style.height = (size*1.4)+'px';
+      el.style.left = (x - 40 + Math.random()*80)+'px';
+      el.style.top = (y - 20 + Math.random()*40)+'px';
+      el.style.background = colors[Math.floor(Math.random()*colors.length)];
+      el.style.animation = `fall ${1.8 + Math.random()*1.4}s ease-out forwards`;
+      el.style.transform = `rotate(${Math.random()*360}deg)`;
+      cont.appendChild(el);
+      setTimeout(()=>cont.removeChild(el), 3200);
+    }
+  }
+
+  // Scratcher - soporta mouse y touch
+  function initScratcher(canvas){
+    const ctx = canvas.getContext('2d');
+    const rect = () => canvas.getBoundingClientRect();
+
+    function resize(){
+      const r = rect();
+      canvas.width = Math.round(r.width);
+      canvas.height = Math.round(r.height);
+      ctx.fillStyle = '#c9cbd3';
+      ctx.fillRect(0,0,canvas.width, canvas.height);
+      // textura
+      for(let i=0;i<200;i++){
+        ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.35})`;
+        ctx.beginPath();
+        ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*3+1, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'destination-out';
+    }
+
+    let drawing = false;
+    function draw(x,y){
+      ctx.beginPath();
+      ctx.arc(x,y, 18, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    function percentErased(){
+      try{
+        const data = ctx.getImageData(0,0,canvas.width, canvas.height).data;
+        let transparent = 0;
+        for(let i=3;i<data.length;i+=4){ // alpha channel
+          if(data[i] === 0) transparent++;
+        }
+        return transparent / (data.length/4);
+      }catch(e){
+        return 0;
+      }
+    }
+
+    function handleReveal(e){
+      const thr = parseFloat(canvas.dataset.threshold||'0.5');
+      const p = percentErased();
+      if(p >= thr){
+        const card = canvas.closest('.card');
+        if(!card.classList.contains('revealed')){
+          card.classList.add('revealed');
+          burstConfetti(e.clientX|| (rect().x+rect().width/2), e.clientY || (rect().y+rect().height/2));
+        }
+      }
+    }
+
+    canvas.addEventListener('mousedown', (e)=>{drawing=true; draw(e.offsetX, e.offsetY); handleReveal(e);});
+    canvas.addEventListener('mousemove', (e)=>{if(drawing){draw(e.offsetX, e.offsetY); handleReveal(e);}});
+    window.addEventListener('mouseup', ()=>{drawing=false;});
+
+    // Touch
+    canvas.addEventListener('touchstart', (e)=>{
+      e.preventDefault(); drawing=true;
+      const t = e.touches[0];
+      const r = rect();
+      draw(t.clientX - r.left, t.clientY - r.top); handleReveal(t);
+    }, {passive:false});
+    canvas.addEventListener('touchmove', (e)=>{
+      e.preventDefault(); if(!drawing) return;
+      const t = e.touches[0]; const r = rect();
+      draw(t.clientX - r.left, t.clientY - r.top); handleReveal(t);
+    }, {passive:false});
+    canvas.addEventListener('touchend', ()=>{drawing=false});
+
+    // Resize observer
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    resize();
+  }
+
+  document.querySelectorAll('canvas.scratch-canvas').forEach(initScratcher);
+</script>
+</body>
+</html>
